@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>빠따 브롤 — 오타니 vs 은가누 ⚔️</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1d3a5f 0%, #0b1626 55%, #060c16 100%);
+    color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 12px;
+  }
+  .wrap { width: 100%; max-width: 560px; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .head h2 { font-size: 16px; margin: 0; }
+  .mini-btn { font-size: 12px; padding: 5px 9px; border-radius: 8px; background: #334155; color: #fff; border: none; cursor: pointer; }
+  .mini-btn:hover { background: #475569; }
+  button { font-family: inherit; cursor: pointer; border: none; color: #fff; user-select: none; touch-action: manipulation; transition: background-color .1s; }
+  button:disabled { cursor: default; opacity: .6; }
+
+  .bars { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .bars .col { flex: 1; }
+  .bars .k { font-size: 11px; color: #cbd5e1; margin-bottom: 3px; }
+  .bars .k.r { text-align: right; }
+  .track { height: 13px; background: rgba(255,255,255,.12); border-radius: 6px; overflow: hidden; }
+  .fill { height: 100%; transition: width .12s linear; }
+  .fill.p { background: #10b981; }
+  .fill.e { background: #e24b4a; margin-left: auto; }
+  .track.flip { transform: scaleX(-1); }
+  .round { font-size: 12px; font-weight: 800; color: #e2e8f0; background: rgba(0,0,0,.4); border-radius: 8px; padding: 4px 8px; white-space: nowrap; }
+  .meterwrap { margin-bottom: 8px; }
+  .meterwrap .k { font-size: 11px; color: #cbd5e1; margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .meterwrap .k b { color: #f6b53c; }
+  .track.meter { height: 7px; }
+  .fill.m { background: #f6b53c; }
+  .fill.m.ready { background: #fbbf24; animation: pulse .7s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+
+  .cvwrap { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: #0b1626; }
+  canvas { display: block; width: 100%; height: auto; }
+
+  .pad { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; align-items: flex-end; }
+  .pad .side { display: flex; gap: 8px; flex-wrap: wrap; max-width: 200px; justify-content: flex-end; }
+  .pbtn { width: 52px; height: 52px; border-radius: 12px; background: #334155; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .pbtn:active { background: #475569; }
+  .pbtn.atk { background: #f59e0b; color: #0f172a; }
+  .pbtn.atk:active { background: #d97706; }
+  .pbtn.sp { background: #7c3aed; }
+  .pbtn.skill { background: #2563eb; }
+  .padhint { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+  .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(5,10,20,.82); text-align: center; padding: 16px; overflow-y: auto; }
+  .overlay .card { max-width: 400px; width: 100%; }
+  .overlay .emoji { font-size: 32px; }
+  .overlay h1 { font-size: 22px; margin: 4px 0; }
+  .overlay p { color: #cbd5e1; font-size: 13px; line-height: 1.5; margin: 6px 0; }
+  .keys { font-size: 12px; color: #e2e8f0; background: rgba(0,0,0,.3); border-radius: 10px; padding: 8px 10px; margin: 8px 0; line-height: 1.8; text-align: left; }
+  .keys b { color: #fbbf24; }
+  .overlay .res { font-size: 26px; font-weight: 900; margin: 4px 0 2px; }
+  .overlay .sub { font-size: 13.5px; color: #e2e8f0; margin-bottom: 12px; }
+  .btn-green { background: #059669; border-radius: 12px; padding: 13px 22px; font-weight: 800; font-size: 16px; }
+  .btn-green:hover { background: #10b981; }
+  .tip { font-size: 11.5px; color: #94a3b8; margin-top: 10px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span style="font-size:12px;color:#94a3b8;">한 화면 대결</span>
+    <h2>⚔️ 빠따 브롤</h2>
+    <button id="muteBtn" class="mini-btn">🔊</button>
+  </div>
+
+  <div class="bars">
+    <div class="col"><div class="k">오타니</div><div class="track"><div id="pHp" class="fill p" style="width:100%"></div></div></div>
+    <div id="roundTag" class="round">READY</div>
+    <div class="col"><div class="k r">은가누</div><div class="track flip"><div id="eHp" class="fill e" style="width:100%"></div></div></div>
+  </div>
+  <div class="meterwrap">
+    <div class="k"><span>필살기 게이지</span><b id="meterState"></b></div>
+    <div class="track meter"><div id="meter" class="fill m" style="width:0%"></div></div>
+  </div>
+
+  <div class="cvwrap" id="cvwrap">
+    <canvas id="cv"></canvas>
+    <div id="startOv" class="overlay">
+      <div class="card">
+        <div class="emoji">⚔️</div>
+        <h1>빠따 브롤</h1>
+        <p>넓은 경기장에서 은가누를 추격해 빠따로 두들기세요. 발판 위로 점프해 거리를 만들고, 스킬로 변수를 만드는 게 핵심입니다.</p>
+        <div class="keys">
+          <b>← →</b> 이동 · <b>↑</b> 점프(이단점프) · <b>↓</b> 가드<br>
+          <b>Q</b> 빠따 스윙 · <b>W</b> 대시(회피)<br>
+          <b>E</b> 강속구 · <b>R</b> 만루 필살기
+        </div>
+        <p style="font-size:11.5px">모바일은 화면 아래 버튼으로 조작하세요.</p>
+        <button id="startBtn" class="btn-green">▶ 시작</button>
+        <div id="bestLine" class="tip"></div>
+      </div>
+    </div>
+    <div id="overOv" class="overlay" hidden>
+      <div class="card">
+        <div class="res" id="overRes">승리!</div>
+        <div class="sub" id="overSub"></div>
+        <div id="bestLine2" class="tip" style="margin-bottom:12px"></div>
+        <button id="againBtn" class="btn-green">다시 하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pad" id="pad">
+    <div class="side" style="max-width:none">
+      <button class="pbtn" data-k="left">◀</button>
+      <button class="pbtn" data-k="right">▶</button>
+    </div>
+    <div class="side">
+      <button class="pbtn" data-k="guard">🛡</button>
+      <button class="pbtn" data-k="jump">▲</button>
+      <button class="pbtn skill" data-k="dash">⚡</button>
+      <button class="pbtn skill" data-k="ball">⚾</button>
+      <button class="pbtn sp" data-k="special">★</button>
+      <button class="pbtn atk" data-k="attack">🏏</button>
+    </div>
+  </div>
+  <div class="padhint">⚡대시로 파고들고 ⚾강속구로 견제 — 치고 빠지기</div>
+</div>
+
+<script>
+window.addEventListener("load", function () {
+  var rand = Math.random;
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $("cv"), ctx = cv.getContext("2d"), cvwrap = $("cvwrap");
+  var W = 0, H = 0, GROUND = 0, SC = 1, ARENA_W = 1300, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  // ---- 오디오 ----
+  var audio = null, muted = false;
+  function ensureAudio() { if (muted) return null; try { if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); return audio; } catch (e) { return null; } }
+  function tone(f, d, t, v, w) { t = t || "sine"; v = v || 0.05; w = w || 0; var ac = ensureAudio(); if (!ac) return; try { var o = ac.createOscillator(), g = ac.createGain(); o.type = t; o.frequency.value = f; o.connect(g); g.connect(ac.destination); var tt = ac.currentTime + w; g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + d); o.start(tt); o.stop(tt + d + 0.02); } catch (e) {} }
+  function noise(d, v) { v = v || 0.08; var ac = ensureAudio(); if (!ac) return; try { var b = ac.createBuffer(1, Math.floor(ac.sampleRate * d), ac.sampleRate), ch = b.getChannelData(0); for (var i = 0; i < ch.length; i++) ch[i] = rand() * 2 - 1; var sc2 = ac.createBufferSource(); sc2.buffer = b; var g = ac.createGain(); g.gain.value = v; var fl = ac.createBiquadFilter(); fl.type = "lowpass"; fl.frequency.value = 1600; sc2.connect(fl); fl.connect(g); g.connect(ac.destination); var tt = ac.currentTime; g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + d); sc2.start(tt); sc2.stop(tt + d + 0.02); } catch (e) {} }
+  function sfx(k) {
+    if (k === "swing") { noise(0.06, 0.05); tone(300, 0.07, "triangle", 0.04); }
+    else if (k === "hit") { noise(0.05, 0.14); tone(420, 0.06, "square", 0.06); }
+    else if (k === "block") { tone(700, 0.05, "square", 0.05); noise(0.04, 0.06); }
+    else if (k === "special") { tone(523, 0.12, "sawtooth", 0.05); tone(784, 0.14, "sawtooth", 0.05, 0.09); tone(1047, 0.22, "sawtooth", 0.05, 0.2); }
+    else if (k === "jump") { tone(440, 0.08, "sine", 0.04); }
+    else if (k === "dash") { noise(0.12, 0.06); tone(620, 0.08, "sawtooth", 0.04); }
+    else if (k === "ball") { tone(880, 0.06, "square", 0.04); noise(0.05, 0.05); }
+    else if (k === "ko") { tone(330, 0.12, "sine", 0.05); tone(247, 0.16, "sine", 0.05, 0.1); tone(180, 0.34, "sine", 0.05, 0.22); }
+  }
+
+  // ---- 입력 ----
+  var keys = { left: false, right: false, guard: false };
+  var req = { jump: false, attack: false, special: false, dash: false, ball: false };
+  function press(k) {
+    if (k === "left" || k === "right" || k === "guard") keys[k] = true;
+    else req[k] = true;
+  }
+  function release(k) { if (k === "left" || k === "right" || k === "guard") keys[k] = false; }
+  var KMAP = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "jump", ArrowDown: "guard", KeyQ: "attack", KeyW: "dash", KeyE: "ball", KeyR: "special" };
+  window.addEventListener("keydown", function (e) {
+    var k = KMAP[e.code]; if (!k) return; e.preventDefault();
+    if (game.phase !== "fight") { if ((k === "attack" || k === "jump") && !e.repeat) startGame(); return; }
+    if (!e.repeat || k === "left" || k === "right" || k === "guard") press(k);
+  });
+  window.addEventListener("keyup", function (e) {
+    var k = ({ ArrowLeft: "left", ArrowRight: "right", ArrowDown: "guard" })[e.code];
+    if (k) { e.preventDefault(); release(k); }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#pad .pbtn"), function (b) {
+    var k = b.getAttribute("data-k");
+    b.addEventListener("pointerdown", function (e) { e.preventDefault(); if (game.phase === "fight") press(k); else startGame(); ensureAudio(); });
+    b.addEventListener("pointerup", function (e) { e.preventDefault(); release(k); });
+    b.addEventListener("pointerleave", function () { release(k); });
+    b.addEventListener("pointercancel", function () { release(k); });
+  });
+
+  // ---- 파이터/발판/투사체 ----
+  function makeFighter(opts) {
+    return {
+      x: opts.x, y: 0, vx: 0, vy: 0, onGround: true, face: opts.face,
+      hp: 100, hpMax: 100, color: opts.color, helmet: opts.helmet, isPlayer: !!opts.isPlayer,
+      attacking: false, atkType: null, atkT: 0, hasHit: false, atkCd: 0,
+      hitstun: 0, iframe: 0, blocking: false, walkPhase: 0,
+      dashT: 0, dashCd: 0, ballCd: 0, surfaceY: 0, jumps: 2
+    };
+  }
+  var game = { phase: "start", meter: 0, startTime: 0, clearMs: 0, win: false, shakeT: -1e9, flash: null, camX: 0, koT: -1 };
+  var P, E, platforms = [], balls = [], BEST = null;
+
+  var MOVES = {
+    swing:   { windup: 0.08, active: 0.12, recover: 0.22, reach: 64, top: 96, dmg: 9,  kb: 210, launch: 0,    meterGain: 12, cd: 0.16 },
+    punch:   { windup: 0.20, active: 0.09, recover: 0.26, reach: 52, top: 86, dmg: 11, kb: 200, launch: 0,    meterGain: 0,  cd: 0.12 },
+    special: { windup: 0.16, active: 0.16, recover: 0.36, reach: 90, top: 110,dmg: 18, kb: 540, launch: -560, meterGain: 0,  cd: 0.20 }
+  };
+  var GRAV = 2200, JUMP = -700;
+
+  function buildPlatforms() {
+    platforms = [
+      { x: ARENA_W * 0.20, w: 120 * SC, y: GROUND - 60 * SC },
+      { x: ARENA_W * 0.46, w: 170 * SC, y: GROUND - 100 * SC },
+      { x: ARENA_W * 0.70, w: 120 * SC, y: GROUND - 60 * SC }
+    ];
+  }
+  function resetGame() {
+    var m = muted;
+    P = makeFighter({ x: ARENA_W * 0.32, face: 1, color: "#0d9488", helmet: "#0f766e", isPlayer: true });
+    E = makeFighter({ x: ARENA_W * 0.68, face: -1, color: "#e24b4a", helmet: "#a32d2d" });
+    P.y = E.y = GROUND; P.surfaceY = E.surfaceY = GROUND; balls = [];
+    game.phase = "start"; game.meter = 0; game.win = false; game.clearMs = 0; game.flash = null; game.koT = -1;
+    game.camX = 0;
+    E.hp = E.hpMax = 120;
+    muted = m;
+  }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  function size() {
+    W = cvwrap.clientWidth || 360;
+    H = Math.round(W * 0.66); if (H > 360) H = 360;
+    cv.width = W * DPR; cv.height = H * DPR; cv.style.height = H + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    GROUND = H * 0.86; SC = Math.max(0.6, W / 560);
+    ARENA_W = W;
+    buildPlatforms();
+    if (P) { P.y = Math.min(P.y, GROUND); E.y = Math.min(E.y, GROUND); }
+  }
+
+  // ---- 전투 ----
+  function startAttack(f, type) { f.attacking = true; f.atkType = type; f.atkT = 0; f.hasHit = false; sfx(type === "special" ? "special" : "swing"); }
+  function bodyRect(f) { var hw = 22 * SC, bh = 96 * SC; return { x: f.x - hw, y: f.y - bh, w: hw * 2, h: bh }; }
+  function atkRect(f) {
+    var mv = MOVES[f.atkType], reach = mv.reach * SC, topH = mv.top * SC;
+    var x = f.face > 0 ? f.x + 8 * SC : f.x - 8 * SC - reach;
+    return { x: x, y: f.y - topH, w: reach, h: topH * 0.72 };
+  }
+  function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+  function applyHit(att, def, mv) {
+    var blocked = def.blocking && def.face === -att.face && def.onGround;
+    var dmg = blocked ? mv.dmg * 0.25 : mv.dmg;
+    def.hp = Math.max(0, def.hp - dmg);
+    var kb = blocked ? mv.kb * 0.35 : mv.kb;
+    def.vx = kb * att.face; if (!blocked && mv.launch) { def.vy = mv.launch; def.onGround = false; }
+    def.hitstun = blocked ? 0.12 : (mv.launch ? 0.5 : 0.28);
+    def.iframe = 0.12; def.attacking = false;
+    game.shakeT = performance.now();
+    if (blocked) { sfx("block"); flash("가드", "#cbd5e1", def); }
+    else {
+      sfx("hit");
+      if (mv === MOVES.special) flash("만루 홈런!", "#fbbf24", def);
+      if (att.isPlayer) game.meter = Math.min(100, game.meter + (mv.meterGain || 0));
+      else game.meter = Math.min(100, game.meter + 6);
+    }
+    att.hasHit = true;
+  }
+  function flash(text, color, who) { game.flash = { text: text, color: color, t0: performance.now(), x: who ? who.x : (game.camX + W / 2), y: (who ? who.y : GROUND) - 120 * SC }; }
+
+  function stepAttack(f, dt) {
+    if (!f.attacking) { if (f.atkCd > 0) f.atkCd -= dt; return; }
+    var mv = MOVES[f.atkType]; f.atkT += dt;
+    var aStart = mv.windup, aEnd = mv.windup + mv.active, total = aEnd + mv.recover;
+    if (f.atkT >= aStart && f.atkT < aEnd && !f.hasHit) {
+      var hb = atkRect(f), other = (f === P) ? E : P;
+      if (other.iframe <= 0 && overlap(hb, bodyRect(other))) applyHit(f, other, mv);
+    }
+    if (f.atkT >= total) { f.attacking = false; f.atkCd = mv.cd; }
+  }
+
+  function throwBall(f) {
+    balls.push({ x: f.x + f.face * 24 * SC, y: f.y - 70 * SC, vx: f.face * 820, owner: f, life: 1.8 });
+    sfx("ball");
+  }
+  function stepBalls(dt) {
+    for (var i = balls.length - 1; i >= 0; i--) {
+      var b = balls[i]; b.x += b.vx * dt; b.life -= dt;
+      var other = b.owner === P ? E : P;
+      var br = { x: b.x - 7 * SC, y: b.y - 7 * SC, w: 14 * SC, h: 14 * SC };
+      if (other.iframe <= 0 && overlap(br, bodyRect(other))) {
+        other.hp = Math.max(0, other.hp - 6); other.vx = 220 * (b.vx > 0 ? 1 : -1);
+        other.hitstun = 0.2; other.iframe = 0.1; game.shakeT = performance.now();
+        sfx("hit"); flash("강속구!", "#bfdbfe", other);
+        if (b.owner.isPlayer) game.meter = Math.min(100, game.meter + 5);
+        balls.splice(i, 1); continue;
+      }
+      if (b.life <= 0 || b.x < -20 || b.x > ARENA_W + 20) balls.splice(i, 1);
+    }
+  }
+
+  function physics(f, dt) {
+    var prevY = f.y;
+    f.vy += GRAV * dt; f.y += f.vy * dt;
+    var landed = false, surf = GROUND;
+    if (f.vy >= 0) {
+      for (var i = 0; i < platforms.length; i++) {
+        var p = platforms[i];
+        if (f.x > p.x && f.x < p.x + p.w && prevY <= p.y + 2 && f.y >= p.y) { f.y = p.y; f.vy = 0; f.onGround = true; landed = true; surf = p.y; break; }
+      }
+    }
+    if (!landed) {
+      if (f.y >= GROUND) { f.y = GROUND; f.vy = 0; f.onGround = true; surf = GROUND; }
+      else f.onGround = false;
+    }
+    f.surfaceY = surf;
+    if (f.onGround) f.jumps = 2;
+    f.x += f.vx * dt;
+    var margin = 26 * SC; f.x = clamp(f.x, margin, ARENA_W - margin);
+    if (f.iframe > 0) f.iframe -= dt;
+    if (f.hitstun > 0) { f.hitstun -= dt; f.vx -= f.vx * Math.min(1, 6 * dt); }
+  }
+
+  function controlPlayer(dt) {
+    if (P.dashCd > 0) P.dashCd -= dt; if (P.ballCd > 0) P.ballCd -= dt;
+    if (P.hitstun > 0) { req.jump = req.attack = req.special = req.dash = req.ball = false; return; }
+    if (P.dashT > 0) { P.dashT -= dt; req.jump = req.attack = req.special = req.dash = req.ball = false; return; }
+    if (!P.attacking) P.face = (E.x >= P.x) ? 1 : -1;
+    P.blocking = keys.guard && P.onGround && !P.attacking;
+    if (!P.attacking && !P.blocking) { var spd = 245; P.vx = 0; if (keys.left) P.vx -= spd; if (keys.right) P.vx += spd; }
+    else if (P.attacking) P.vx -= P.vx * Math.min(1, 10 * dt);
+    if (req.jump && P.jumps > 0 && !P.attacking && !P.blocking) { P.vy = JUMP * (P.onGround ? 1 : 0.9); P.onGround = false; P.jumps--; sfx("jump"); }
+    if (req.dash && P.dashCd <= 0 && !P.attacking) { P.dashT = 0.18; P.vx = P.face * 820; P.iframe = 0.22; P.dashCd = 0.72; sfx("dash"); }
+    if (req.ball && P.ballCd <= 0 && !P.attacking && !P.blocking) { throwBall(P); P.ballCd = 1.25; }
+    if (req.attack && !P.attacking && P.atkCd <= 0 && !P.blocking) startAttack(P, "swing");
+    if (req.special && !P.attacking && game.meter >= 100) { game.meter = 0; startAttack(P, "special"); }
+    req.jump = req.attack = req.special = req.dash = req.ball = false;
+  }
+
+  var aiTimer = 0, aiWant = 0;
+  function controlAI(dt) {
+    if (E.hitstun > 0) { E.blocking = false; return; }
+    var dist = P.x - E.x, ad = Math.abs(dist);
+    if (!E.attacking) E.face = dist >= 0 ? 1 : -1;
+    var lost = 1 - E.hp / E.hpMax, aggro = 0.5 + lost * 0.5, spd = 175 + lost * 90;
+    aiTimer -= dt; E.blocking = false;
+    if (E.attacking) { E.vx -= E.vx * Math.min(1, 10 * dt); return; }
+    if (ad < 58 * SC) {
+      if (E.atkCd <= 0 && rand() < (1.0 + aggro) * dt * 8) { startAttack(E, "punch"); E.vx = 0; return; }
+      if (P.attacking && rand() < 0.62) { E.blocking = true; E.vx = 0; return; }
+      if (aiTimer <= 0) { aiWant = rand() < 0.4 ? -1 : 0; aiTimer = 0.3 + rand() * 0.4; }
+      E.vx = aiWant * spd * 0.7 * E.face;
+    } else {
+      E.vx = (dist > 0 ? 1 : -1) * spd;
+      if (E.onGround && rand() < dt * (0.4 + aggro)) { E.vy = JUMP * 0.85; E.onGround = false; }
+    }
+  }
+
+  // ---- 그리기 ----
+  function rr(x, y, w, h, r) {
+    r = r == null ? 5 * SC : r; var rad = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+    if (w < 0) { x += w; w = -w; } if (h < 0) { y += h; h = -h; }
+    ctx.beginPath(); ctx.moveTo(x + rad, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rad); ctx.arcTo(x + w, y + h, x, y + h, rad);
+    ctx.arcTo(x, y + h, x, y, rad); ctx.arcTo(x, y, x + w, y, rad); ctx.closePath();
+  }
+  function drawFighter(f, now) {
+    var blink = f.iframe > 0 && Math.floor(now / 60) % 2 === 0;
+    ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.face, 1);
+    if (blink) ctx.globalAlpha = 0.5;
+    var s = SC, moving = Math.abs(f.vx) > 5 && f.onGround;
+    if (moving) f.walkPhase += 0.25; else f.walkPhase *= 0.8;
+    var legSwing = Math.sin(f.walkPhase) * (moving ? 8 : 0) * s, airTuck = f.onGround ? 0 : 6 * s;
+    ctx.fillStyle = "#e8e8e8";
+    rr(-12 * s, -34 * s + airTuck, 9 * s, 34 * s - airTuck + legSwing); ctx.fill();
+    rr(3 * s, -34 * s + airTuck, 9 * s, 34 * s - airTuck - legSwing); ctx.fill();
+    var lean = f.hitstun > 0 ? -0.18 : (f.dashT > 0 ? 0.3 : (f.attacking ? 0.12 : 0));
+    ctx.save(); ctx.rotate(lean);
+    ctx.fillStyle = f.color; rr(-16 * s, -78 * s, 32 * s, 46 * s); ctx.fill();
+    var armA = -0.3, ext = 16 * s;
+    if (f.attacking) {
+      var mv = MOVES[f.atkType];
+      if (f.isPlayer || f.atkType === "special") { var sp = Math.min(1, f.atkT / (mv.windup + mv.active)); armA = -1.5 + 2.6 * (1 - (1 - sp) * (1 - sp)); }
+      else { if (f.atkT < mv.windup) armA = -0.3 - 0.5 * (f.atkT / mv.windup); else { armA = -0.1; ext = (16 + 26 * Math.min(1, (f.atkT - mv.windup) / mv.active)) * s; } }
+    } else if (f.blocking) armA = -1.4;
+    ctx.save(); ctx.translate(13 * s, -62 * s); ctx.rotate(armA);
+    ctx.fillStyle = f.color; rr(0, -5 * s, ext, 10 * s); ctx.fill();
+    if (f.isPlayer || f.atkType === "special") { ctx.save(); ctx.translate(ext, 0); ctx.rotate(0.1); ctx.fillStyle = "#c98a3a"; rr(0, -4.5 * s, (f.atkType === "special" ? 58 : 48) * s, 9 * s); ctx.fill(); ctx.restore(); }
+    else { ctx.fillStyle = "#c89060"; ctx.beginPath(); ctx.arc(ext, 0, 8 * s, 0, 7); ctx.fill(); }
+    ctx.restore(); ctx.restore();
+    ctx.fillStyle = f.isPlayer ? "#f0c08a" : "#c89060"; ctx.beginPath(); ctx.arc(0, -90 * s, 11 * s, 0, 7); ctx.fill();
+    ctx.fillStyle = f.helmet; ctx.beginPath(); ctx.arc(0, -92 * s, 12 * s, Math.PI, 0); ctx.fill();
+    ctx.restore();
+  }
+  function drawPlatform(p) {
+    ctx.fillStyle = "#26405f"; rr(p.x, p.y, p.w, 16 * SC, 4 * SC); ctx.fill();
+    ctx.fillStyle = "#3a5a82"; ctx.fillRect(p.x, p.y, p.w, 4 * SC);
+    ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
+    for (var gx = p.x + 14 * SC; gx < p.x + p.w; gx += 22 * SC) { ctx.beginPath(); ctx.moveTo(gx, p.y + 4 * SC); ctx.lineTo(gx, p.y + 16 * SC); ctx.stroke(); }
+  }
+  function drawBall(b) {
+    ctx.fillStyle = "#f8fafc"; ctx.beginPath(); ctx.arc(b.x, b.y, 7 * SC, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#e24b4a"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(b.x - 2 * SC, b.y, 5 * SC, -0.6, 0.6); ctx.stroke();
+  }
+  var FONT = '-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+
+  function draw(now) {
+    var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#13243f"); g.addColorStop(1, "#0a1320");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,255,255,.06)";
+    for (var i = 0; i < 80; i++) { var px = ((i * 71) - game.camX * 0.3) % (W + 40); if (px < 0) px += W + 40; var py = (i * 37) % (H * 0.5); ctx.fillRect(px - 20, py, 2, 2); }
+
+    var shake = Math.max(0, 1 - (now - game.shakeT) / 200) * 5;
+    ctx.save();
+    if (shake > 0.2) ctx.translate((rand() * 2 - 1) * shake, (rand() * 2 - 1) * shake);
+    ctx.translate(-game.camX, 0);
+
+    ctx.fillStyle = "#16325a"; ctx.fillRect(0, GROUND, ARENA_W, H - GROUND);
+    ctx.strokeStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.moveTo(0, GROUND); ctx.lineTo(ARENA_W, GROUND); ctx.stroke();
+    // 경기장 양끝 벽
+    ctx.fillStyle = "rgba(255,255,255,.05)"; ctx.fillRect(0, GROUND - 70 * SC, 6, 70 * SC); ctx.fillRect(ARENA_W - 6, GROUND - 70 * SC, 6, 70 * SC);
+    platforms.forEach(drawPlatform);
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    [P, E].forEach(function (f) { var sw = 22 * SC * (f.onGround ? 1 : 0.7); ctx.beginPath(); ctx.ellipse(f.x, f.surfaceY + 2, sw, 5 * SC, 0, 0, 7); ctx.fill(); });
+    balls.forEach(drawBall);
+    var order = P.x <= E.x ? [E, P] : [P, E];
+    drawFighter(order[0], now); drawFighter(order[1], now);
+    if (game.flash) {
+      var fa = 1 - (now - game.flash.t0) / 800;
+      if (fa > 0) { ctx.globalAlpha = Math.max(0, fa); ctx.fillStyle = game.flash.color; ctx.font = "900 " + Math.round(18 * SC) + "px " + FONT; ctx.textAlign = "center"; ctx.fillText(game.flash.text, game.flash.x, game.flash.y - (1 - fa) * 16); ctx.globalAlpha = 1; }
+      else game.flash = null;
+    }
+    ctx.restore();
+  }
+
+  function hud() {
+    $("pHp").style.width = (P.hp / P.hpMax * 100) + "%";
+    $("eHp").style.width = (E.hp / E.hpMax * 100) + "%";
+    var m = $("meter"); m.style.width = game.meter + "%"; m.className = "fill m" + (game.meter >= 100 ? " ready" : "");
+    $("meterState").textContent = game.meter >= 100 ? "R — 만루 필살기!" : "";
+    if (game.phase === "fight") $("roundTag").textContent = "FIGHT";
+  }
+
+  var last = performance.now();
+  function loop(now) {
+    requestAnimationFrame(loop);
+    var dt = (now - last) / 1000; last = now; if (dt > 0.04) dt = 0.04;
+    if (game.phase === "fight") {
+      controlPlayer(dt); controlAI(dt);
+      stepAttack(P, dt); stepAttack(E, dt); stepBalls(dt);
+      physics(P, dt); physics(E, dt);
+      game.camX = 0;
+      if ((P.hp <= 0 || E.hp <= 0) && game.koT < 0) { game.koT = now; endSoon(); }
+    }
+    hud(); draw(now);
+  }
+  function endSoon() {
+    game.win = E.hp <= 0 && P.hp > 0; sfx("ko");
+    flash(game.win ? "K.O." : "DOWN", game.win ? "#fde047" : "#fca5a5", game.win ? E : P);
+    if (game.win) { game.clearMs = Math.round(performance.now() - game.startTime); if (BEST == null || game.clearMs < BEST) BEST = game.clearMs; }
+    setTimeout(function () { game.phase = "over"; showOver(); }, 900);
+  }
+  function startGame() { resetGame(); game.phase = "fight"; game.koT = -1; game.startTime = performance.now(); $("startOv").hidden = true; $("overOv").hidden = true; ensureAudio(); }
+  function showOver() {
+    $("overRes").textContent = game.win ? "🎉 승리!" : "패배…";
+    $("overRes").style.color = game.win ? "#fde047" : "#fca5a5";
+    $("overSub").textContent = game.win ? ("은가누 KO! · 기록 " + (game.clearMs / 1000).toFixed(1) + "초") : "오타니가 쓰러졌습니다.";
+    $("bestLine2").textContent = BEST != null ? ("세션 최고 기록: " + (BEST / 1000).toFixed(1) + "초") : "";
+    $("overOv").hidden = false;
+  }
+
+  $("startBtn").addEventListener("click", startGame);
+  $("againBtn").addEventListener("click", startGame);
+  $("muteBtn").addEventListener("click", function () { muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊"; });
+  window.addEventListener("resize", size);
+
+  size(); resetGame(); size();
+  loop(performance.now());
+});
+</script>
+</body>
+</html>

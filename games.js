@@ -24,8 +24,17 @@ export const GAMES = [
     available: true,
     featured: true
   },
-  // 아래 두 칸은 그리드가 비어 보이지 않도록 둔 자리표시자입니다.
+  {
+    id: "battle",
+    title: "빠따 브롤",
+    desc: "오타니 vs 은가누. 방향키로 움직이며 싸우는 격투.",
+    blurb: "한 화면 경기장에서 오타니의 빠따로 은가누를 쓰러뜨리는 횡스크롤 격투. 대시·강속구·이단점프·만루 필살기까지.",
+    tags: ["배틀", "격투"],
+    path: "battle.html",
+    accent: "#e24b4a",
+    available: true
+  },
+  // 아래 칸은 그리드가 비어 보이지 않도록 둔 자리표시자입니다.
   // 새 게임이 생기면 이 항목을 실제 게임으로 교체하거나 삭제하세요.
-  { id: "coming-2", title: "두 번째 게임", desc: "다음 게임을 준비하고 있어요.", tags: [], path: "", accent: "#475569", available: false },
   { id: "coming-3", title: "세 번째 게임", desc: "다음 게임을 준비하고 있어요.", tags: [], path: "", accent: "#475569", available: false }
 ];
