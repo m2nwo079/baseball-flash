@@ -1,0 +1,528 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>홈런 더비 ⚾</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: radial-gradient(1200px 600px at 50% -10%, #1d3a5f 0%, #0b1626 55%, #060c16 100%); color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 12px; }
+  .wrap { width: 100%; max-width: 480px; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .head h2 { font-size: 16px; margin: 0; }
+  .mini-btn { font-size: 12px; padding: 5px 9px; border-radius: 8px; background: #334155; color: #fff; border: none; cursor: pointer; }
+  .mini-btn:hover { background: #475569; }
+  button { font-family: inherit; cursor: pointer; border: none; color: #fff; user-select: none; touch-action: manipulation; transition: background-color .12s, box-shadow .12s; }
+  button:disabled { cursor: default; opacity: .6; }
+  .cvwrap { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: #0b1626; }
+  canvas { display: block; width: 100%; height: auto; }
+  #hud { position: absolute; inset: 0; pointer-events: none; }
+  #topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 8px; padding: 8px 10px; }
+  .stat { background: rgba(0,0,0,.45); border-radius: 10px; padding: 5px 10px; }
+  .stat.right { margin-left: auto; }
+  .stat .k { font-size: 10px; color: #cbd5e1; }
+  .stat .v { font-size: 18px; font-weight: 800; line-height: 1.1; }
+  #pitchTag { position: absolute; top: 60px; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 15px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+  .odots { display: inline-flex; gap: 3px; }
+  .od { width: 9px; height: 9px; border-radius: 50%; background: #475569; display: inline-block; }
+  .od.on { background: #ef4444; }
+  .flash { position: absolute; left: 0; right: 0; top: 42%; transform: translateY(-50%); text-align: center; font-weight: 900; pointer-events: none; }
+  .flash .txt { display: inline-block; padding: 6px 16px; border-radius: 12px; font-size: 25px; }
+  .flash.hr .txt { color: #0f172a; background: #fde047; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+  .flash.out .txt { color: #fff; background: rgba(220,38,38,.85); }
+  .flash.take .txt { color: #e2e8f0; background: rgba(0,0,0,.5); font-size: 17px; }
+  .flash.none { display: none; }
+  .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(5,10,20,.8); pointer-events: auto; text-align: center; padding: 12px; overflow-y: auto; }
+  .overlay .card { max-width: 384px; width: 100%; max-height: 100%; }
+  .overlay .emoji { font-size: 30px; }
+  .overlay h1 { font-size: 20px; margin: 3px 0; }
+  .overlay p { color: #cbd5e1; font-size: 12px; line-height: 1.45; margin: 3px 0; }
+  .overlay .res { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+  .overlay .sub { font-size: 13.5px; margin-bottom: 10px; color: #e2e8f0; }
+  .lbl { font-size: 11.5px; color: #94a3b8; margin: 8px 0 4px; }
+  .btn-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .btn-green { background: #059669; border-radius: 11px; padding: 11px 16px; font-weight: 800; font-size: 14px; }
+  .btn-green:hover { background: #10b981; }
+  .btn-slate { background: #475569; border-radius: 11px; padding: 11px 16px; font-weight: 800; font-size: 14px; }
+  .btn-slate:hover { background: #64748b; }
+  .muted { color: #94a3b8; font-weight: 400; font-size: 11px; }
+  .teamgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .teamgrid button { border-radius: 8px; padding: 7px 0; font-weight: 800; font-size: 12px; border: 2px solid transparent; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+  .teamgrid button.sel { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
+  #parkInfo { font-size: 11.5px; color: #e2e8f0; margin-top: 6px; }
+  .playerseg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pbtn { border-radius: 10px; padding: 9px 6px; background: #334155; border: 2px solid transparent; text-align: center; line-height: 1.2; }
+  .pbtn:hover { background: #475569; }
+  .pbtn.on { background: #0d9488; border-color: #fff; }
+  .pbtn .pn { font-weight: 800; font-size: 14px; }
+  #startBtn { font-size: 16px; padding: 13px 26px; }
+  #nameInput { width: 70%; max-width: 220px; padding: 9px 10px; border-radius: 9px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; font-family: inherit; }
+  #regBox { margin: 8px 0; }
+  .lblist { text-align: left; max-height: 230px; overflow-y: auto; margin: 8px 0; background: rgba(0,0,0,.3); border-radius: 10px; padding: 6px 4px; }
+  .lbrow { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .lbrow:last-child { border-bottom: none; }
+  .lbrow .rk { width: 22px; font-weight: 800; color: #fbbf24; text-align: center; }
+  .lbrow .nm { flex: 1; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lbrow .nm small { color: #94a3b8; font-weight: 400; }
+  .lbrow .sc { color: #e2e8f0; font-weight: 700; }
+  .lbrow .ds { color: #94a3b8; font-size: 11px; margin-left: 6px; }
+  .dot-team { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+  .controls { margin-top: 10px; }
+  .big { width: 100%; border-radius: 14px; padding: 16px 0; font-weight: 800; font-size: 18px; }
+  .btn-primary { background: #2563eb; } .btn-primary:hover { background: #3b82f6; } .btn-primary:active { background: #1d4ed8; }
+  .btn-swing { background: #f59e0b; color: #0f172a; } .btn-swing:hover { background: #fbbf24; } .btn-swing:active { background: #d97706; }
+  .btn-wait { background: #334155; color: #94a3b8; }
+  [hidden] { display: none !important; }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <span style="font-size:12px;color:#94a3b8;">포수 뒤 중계 시점</span>
+    <h2>⚾ 홈런 더비</h2>
+    <button id="muteBtn" class="mini-btn">🔊</button>
+  </div>
+  <div class="cvwrap" id="cvwrap">
+    <div id="hud">
+      <div id="topbar">
+        <div class="stat"><div class="k">홈런</div><div class="v" id="hrVal">0</div></div>
+        <div class="stat"><div class="k">최장</div><div class="v" id="longVal">-</div></div>
+        <div class="stat right"><div class="k">남은 아웃</div><div class="v"><span class="odots" id="outDots"></span></div></div>
+      </div>
+      <div id="pitchTag"></div>
+      <div id="flash" class="flash none"><span class="txt"></span></div>
+      <div id="startOv" class="overlay">
+        <div class="card">
+          <div class="emoji">⚾</div>
+          <h1>홈런 더비</h1>
+          <p>팀을 고르면 홈구장이 자동 설정돼요. 선수를 고르고 <b>스페이스 / 탭</b>으로 투구 → 다시 눌러 스윙! <b>안 치고 보내도 아웃</b>이니 적극적으로 노리세요. 타이밍 여유를 넉넉하게 잡아 두었어요.</p>
+          <div class="lbl">팀 (KBO)</div>
+          <div id="teamGrid" class="teamgrid"></div>
+          <div id="parkInfo"></div>
+          <div class="lbl">타자 선택</div>
+          <div id="playerSeg" class="playerseg"></div>
+          <div class="btn-row"><button id="startBtn" class="btn-green">▶ 시작 (아웃 7)</button></div>
+          <div class="btn-row"><button id="lbBtn1" class="btn-slate">🏆 랭킹 보기</button></div>
+          <p id="top1" class="muted"></p>
+          <p id="webglWarn" class="muted" hidden>※ 이 브라우저에서 3D(WebGL)를 지원하지 않는 것 같아요.</p>
+        </div>
+      </div>
+      <div id="overOv" class="overlay" hidden>
+        <div class="card">
+          <div class="res" id="overRes">🎉 경기 종료!</div>
+          <div class="sub" id="overSub">홈런 0개</div>
+          <div id="regBox">
+            <input id="nameInput" maxlength="12" placeholder="닉네임" />
+            <div class="btn-row"><button id="regBtn" class="btn-green">랭킹 등록</button></div>
+            <div id="regMsg" class="muted"></div>
+          </div>
+          <p id="overBest" class="muted"></p>
+          <div class="btn-row">
+            <button id="lbBtn2" class="btn-slate">🏆 랭킹</button>
+            <button id="againBtn" class="btn-green">다시 하기</button>
+            <button id="homeBtn" class="btn-slate">처음으로</button>
+          </div>
+        </div>
+      </div>
+      <div id="lbOv" class="overlay" hidden>
+        <div class="card">
+          <div class="res" style="font-size:21px;">🏆 온라인 랭킹</div>
+          <div id="lbList" class="lblist"></div>
+          <div id="lbNote" class="muted"></div>
+          <div class="btn-row"><button id="lbClose" class="btn-slate">닫기</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="throwBtn" class="btn-primary big">🥎 투구 받기 <span class="muted">(스페이스 / 탭)</span></button>
+    <button id="swingBtn" class="btn-swing big" hidden>🏏 스윙! <span class="muted">(타이밍!)</span></button>
+    <button id="waitBtn" class="btn-wait big" hidden disabled>…</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+window.addEventListener("load", function () {
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDqalQJTNLRJOjwxWJxRb-CaZKLaQpO3_g",
+    authDomain: "homerun-derby-c3b3f.firebaseapp.com",
+    projectId: "homerun-derby-c3b3f",
+    storageBucket: "homerun-derby-c3b3f.firebasestorage.app",
+    messagingSenderId: "566158707212",
+    appId: "1:566158707212:web:55f8761a546465a858fc29",
+    measurementId: "G-F4F7STM8C8"
+  };
+
+  var D2R = Math.PI / 180, G = 9.8, IDEAL = 15 / 17;
+  var rand = Math.random;
+  var $ = function (id) { return document.getElementById(id); };
+  var cvwrap = $("cvwrap");
+
+  var PARKS = {
+    jamsil:   { n: "잠실야구장", cf: 125, lf: 100, wall: 2.6, grass: 0x2f8b44, sky: 0x8ec9e8, dome: false },
+    gocheok:  { n: "고척 스카이돔", cf: 122, lf: 99, wall: 4.0, grass: 0x36915a, sky: 0x141a28, dome: true },
+    munhak:   { n: "인천 SSG 랜더스필드", cf: 120, lf: 95, wall: 2.8, grass: 0x2f8b44, sky: 0x8ec9e8, dome: false },
+    suwon:    { n: "수원 KT 위즈파크", cf: 120, lf: 95, wall: 2.8, grass: 0x2f8b44, sky: 0x86c7e6, dome: false },
+    changwon: { n: "창원 NC파크", cf: 122, lf: 101, wall: 3.2, grass: 0x2e8a43, sky: 0x88c9e8, dome: false },
+    daegu:    { n: "대구 삼성라이온즈파크", cf: 120, lf: 99, wall: 2.4, grass: 0x32925a, sky: 0x8fcaea, dome: false },
+    sajik:    { n: "부산 사직야구장", cf: 121, lf: 95, wall: 4.8, grass: 0x2c8341, sky: 0x82c4e4, dome: false },
+    gwangju:  { n: "광주 기아챔피언스필드", cf: 121, lf: 99, wall: 2.9, grass: 0x309050, sky: 0x8ecae9, dome: false },
+    daejeon:  { n: "대전 한화생명 볼파크", cf: 122, lf: 99, wall: 3.0, grass: 0x2f8b44, sky: 0x8ec9e8, dome: false }
+  };
+  var TEAMS = [
+    { n: "LG 트윈스", a: "LG", p: 0xC30452, s: 0x000000, park: "jamsil", players: [{ n: "문보경", bats: "L", pw: 80, ct: 85 }, { n: "오스틴", bats: "R", pw: 92, ct: 80 }] },
+    { n: "두산 베어스", a: "두산", p: 0x1A1748, s: 0xE20B17, park: "jamsil", players: [{ n: "양의지", bats: "R", pw: 83, ct: 88 }, { n: "카메론", bats: "R", pw: 90, ct: 76 }] },
+    { n: "키움 히어로즈", a: "키움", p: 0x6B0F1A, s: 0xD4A03C, park: "gocheok", players: [{ n: "김건희", bats: "R", pw: 84, ct: 74 }, { n: "안치홍", bats: "R", pw: 76, ct: 86 }] },
+    { n: "SSG 랜더스", a: "SSG", p: 0xCE0E2D, s: 0xFFB81C, park: "munhak", players: [{ n: "에레디아", bats: "R", pw: 82, ct: 86 }, { n: "최정", bats: "R", pw: 96, ct: 80 }] },
+    { n: "KT 위즈", a: "KT", p: 0x111111, s: 0xEB1C24, park: "suwon", players: [{ n: "안현민", bats: "R", pw: 78, ct: 88 }, { n: "힐리어드", bats: "L", pw: 94, ct: 66 }] },
+    { n: "NC 다이노스", a: "NC", p: 0x315288, s: 0xC7A86B, park: "changwon", players: [{ n: "박건우", bats: "R", pw: 80, ct: 88 }, { n: "김주원", bats: "S", pw: 78, ct: 80 }] },
+    { n: "삼성 라이온즈", a: "삼성", p: 0x074CA1, s: 0xC0C0C0, park: "daegu", players: [{ n: "최형우", bats: "L", pw: 88, ct: 87 }, { n: "디아즈", bats: "L", pw: 91, ct: 74 }] },
+    { n: "롯데 자이언츠", a: "롯데", p: 0x07215C, s: 0xD00F31, park: "sajik", players: [{ n: "레이예스", bats: "S", pw: 82, ct: 88 }, { n: "고승민", bats: "L", pw: 78, ct: 85 }] },
+    { n: "KIA 타이거즈", a: "KIA", p: 0xEA0029, s: 0x06141F, park: "gwangju", players: [{ n: "김도영", bats: "R", pw: 90, ct: 89 }, { n: "나성범", bats: "L", pw: 88, ct: 85 }] },
+    { n: "한화 이글스", a: "한화", p: 0xFF6600, s: 0x000000, park: "daejeon", players: [{ n: "노시환", bats: "R", pw: 93, ct: 79 }, { n: "강백호", bats: "L", pw: 87, ct: 86 }] }
+  ];
+  // 난이도 하향: 투구를 약간 느리게(d0/d1 증가), 변화량(drift/vb) 완화, 마구 비중 축소
+  var PITCH_TYPES = [
+    { n: "직구", d0: 1120, d1: 1300, drift: 0.0, vb: 0.0, w: 55 },
+    { n: "슬라이더", d0: 1200, d1: 1360, drift: 0.4, vb: 0.0, w: 17 },
+    { n: "커브", d0: 1300, d1: 1470, drift: 0.2, vb: -0.30, w: 13 },
+    { n: "체인지업", d0: 1450, d1: 1640, drift: 0.10, vb: 0.12, w: 12 },
+    { n: "마구", d0: 1200, d1: 1420, drift: 0.7, vb: 0.25, w: 3 }
+  ];
+  function pickPitch() { var tot = 0, i; for (i = 0; i < PITCH_TYPES.length; i++) tot += PITCH_TYPES[i].w; var r = rand() * tot; for (i = 0; i < PITCH_TYPES.length; i++) { r -= PITCH_TYPES[i].w; if (r <= 0) return PITCH_TYPES[i]; } return PITCH_TYPES[0]; }
+
+  var renderer, scene, camera, clock, ball, batPivot, batMesh, batHolder, bGroup, batterParts, grassMesh, ambientLight, fieldGroup, activePark, grassTex, crowdTex, dirtTrackMat;
+  var audio = null, db = null, fbReady = false, lbRows = [];
+  // 난이도 하향: 아웃 5 → 7
+  var S = { phase: "start", outsLeft: 7, totalOuts: 7, hr: 0, longestM: 0, best: 0, muted: false, team: 0, player: 0, win: 1, powerMult: 1, swingFrom: 1.9, swingTo: -1.5, bodyTo: -0.6, submitted: false, playerName: "", pitch: null, flight: null, swing: { active: false, t0: 0 } };
+
+  function stanceLabel(b) { return b === "L" ? "좌타" : b === "S" ? "양타" : "우타"; }
+  function radiusAt(p, aDeg) { var x = Math.min(Math.abs(aDeg), 45) / 45; return p.lf + (p.cf - p.lf) * Math.cos(x * Math.PI / 2); }
+
+  function ensureAudio() { if (S.muted) return null; try { if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); return audio; } catch (e) { return null; } }
+  function tone(f, d, t, v, w) { t = t || "sine"; v = v || 0.05; w = w || 0; var ac = ensureAudio(); if (!ac) return; try { var o = ac.createOscillator(), g = ac.createGain(); o.type = t; o.frequency.value = f; o.connect(g); g.connect(ac.destination); var tt = ac.currentTime + w; g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + d); o.start(tt); o.stop(tt + d + 0.02); } catch (e) {} }
+  function noise(d, v) { v = v || 0.08; var ac = ensureAudio(); if (!ac) return; try { var b = ac.createBuffer(1, Math.floor(ac.sampleRate * d), ac.sampleRate), ch = b.getChannelData(0); for (var i = 0; i < ch.length; i++) ch[i] = rand() * 2 - 1; var sc = ac.createBufferSource(); sc.buffer = b; var g = ac.createGain(); g.gain.value = v; var fl = ac.createBiquadFilter(); fl.type = "lowpass"; fl.frequency.value = 1500; sc.connect(fl); fl.connect(g); g.connect(ac.destination); var tt = ac.currentTime; g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + d); sc.start(tt); sc.stop(tt + d + 0.02); } catch (e) {} }
+  function sfx(k) { if (k === "crack") { noise(0.05, 0.14); tone(420, 0.05, "square", 0.06); } else if (k === "hr") { tone(523, 0.13, "sawtooth", 0.05); tone(659, 0.13, "sawtooth", 0.05, 0.1); tone(784, 0.15, "sawtooth", 0.05, 0.2); tone(1047, 0.25, "sawtooth", 0.05, 0.32); } else if (k === "whiff") { noise(0.13, 0.09); tone(140, 0.18, "sine", 0.04); } else if (k === "out") { tone(330, 0.12, "sine", 0.05); tone(247, 0.18, "sine", 0.05, 0.1); } }
+
+  function grassTexture() { var c = document.createElement("canvas"); c.width = c.height = 256; var x = c.getContext("2d"); for (var i = 0; i < 256; i += 26) { x.fillStyle = ((i / 26) | 0) % 2 ? "#3a9a52" : "#2e8344"; x.fillRect(0, i, 256, 26); } var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); return t; }
+  function crowdTexture() { var c = document.createElement("canvas"); c.width = c.height = 128; var x = c.getContext("2d"); x.fillStyle = "#10131c"; x.fillRect(0, 0, 128, 128); var cols = ["#e2e8f0", "#f59e0b", "#ef4444", "#3b82f6", "#facc15", "#22c55e", "#cbd5e1", "#fb7185", "#a78bfa"]; for (var i = 0; i < 1100; i++) { x.fillStyle = cols[(rand() * cols.length) | 0]; x.fillRect(rand() * 128 | 0, rand() * 128 | 0, 2, 2); } var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; }
+
+  function person(o) {
+    o = o || {};
+    var jersey = o.jersey != null ? o.jersey : 0x2563eb, pants = o.pants != null ? o.pants : 0xeaeaea, skin = 0xf0c08a, helmet = o.helmet != null ? o.helmet : 0x111111;
+    var jm = new THREE.MeshLambertMaterial({ color: jersey }), pm = new THREE.MeshLambertMaterial({ color: pants }), sm = new THREE.MeshLambertMaterial({ color: skin }), hm = new THREE.MeshLambertMaterial({ color: helmet });
+    var g = new THREE.Group(), jset = [];
+    var lL = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.82, 8), pm); lL.position.set(-0.12, 0.41, 0.02); g.add(lL);
+    var rL = lL.clone(); rL.position.x = 0.12; g.add(rL);
+    var pel = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.18, 0.26, 10), jm); pel.position.y = 0.92; g.add(pel); jset.push(pel);
+    var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.55, 12), jm); torso.position.y = 1.28; g.add(torso); jset.push(torso);
+    var sh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 8), jm); sh.rotation.z = Math.PI / 2; sh.position.y = 1.5; g.add(sh); jset.push(sh);
+    if (o.arms !== false) {
+      var aL = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.05, 0.5, 8), jm); aL.position.set(-0.27, 1.32, 0); aL.rotation.z = 0.35; g.add(aL);
+      var aR = aL.clone(); aR.position.x = 0.27; aR.rotation.z = -0.35; g.add(aR);
+    }
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.125, 14, 14), sm); head.position.y = 1.71; g.add(head);
+    var hel = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 14, 0, Math.PI * 2, 0, Math.PI * 0.6), hm); hel.position.y = 1.73; g.add(hel);
+    return { group: g, jersey: jset, helmet: hel };
+  }
+  function shadow(x, z, r) { var s = new THREE.Mesh(new THREE.CircleGeometry(r, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 })); s.rotation.x = -Math.PI / 2; s.position.set(x, 0.03, z); scene.add(s); }
+
+  function arcStrip(p, rOff, y0, h, mat, fromDeg, toDeg, uRep) {
+    var seg = Math.max(8, Math.round((toDeg - fromDeg) / 1.5)), pos = [], uv = [], idx = [];
+    for (var i = 0; i <= seg; i++) {
+      var a = fromDeg + (toDeg - fromDeg) * i / seg, r = radiusAt(p, a) + rOff, rad = a * D2R, x = Math.sin(rad) * r, z = Math.cos(rad) * r;
+      pos.push(x, y0, z, x, y0 + h, z); var u = i / seg * uRep; uv.push(u, 0, u, 1);
+    }
+    for (var j = 0; j < seg; j++) { var b = j * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+    return new THREE.Mesh(geo, mat);
+  }
+  function flatBand(p, offIn, offOut, y, mat) {
+    var seg = 60, pos = [], uv = [], idx = [];
+    for (var i = 0; i <= seg; i++) {
+      var a = -45 + 90 * i / seg, rad = a * D2R, base = radiusAt(p, a), ri = base + offIn, ro = base + offOut;
+      pos.push(Math.sin(rad) * ri, y, Math.cos(rad) * ri, Math.sin(rad) * ro, y, Math.cos(rad) * ro); uv.push(0, 0, 1, 1);
+    }
+    for (var j = 0; j < seg; j++) { var b = j * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+    return new THREE.Mesh(geo, mat);
+  }
+
+  function buildScene() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x8ec9e8);
+    scene.fog = new THREE.Fog(0x8ec9e8, 120, 380);
+    camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
+    camera.position.set(0, 4.3, -7.2); camera.lookAt(0, 1.5, 24);
+
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.85); scene.add(ambientLight);
+    var sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(-40, 80, 25); scene.add(sun);
+
+    grassTex = grassTexture(); crowdTex = crowdTexture();
+    dirtTrackMat = new THREE.MeshLambertMaterial({ color: 0xc8965a });
+    grassMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshLambertMaterial({ map: grassTex, color: 0x2f8b44 }));
+    grassMesh.rotation.x = -Math.PI / 2; scene.add(grassMesh);
+
+    var dirtMat = new THREE.MeshLambertMaterial({ color: 0xb07a3c });
+    var dirt = new THREE.Mesh(new THREE.CircleGeometry(29, 48), dirtMat); dirt.rotation.x = -Math.PI / 2; dirt.position.set(0, 0.01, 12); scene.add(dirt);
+    var infield = new THREE.Mesh(new THREE.CircleGeometry(17, 4), new THREE.MeshLambertMaterial({ color: 0x2e8344 })); infield.rotation.x = -Math.PI / 2; infield.position.set(0, 0.015, 19.4); scene.add(infield);
+    var plate = new THREE.Mesh(new THREE.CircleGeometry(0.5, 5), new THREE.MeshLambertMaterial({ color: 0xf4f4f4 })); plate.rotation.x = -Math.PI / 2; plate.position.set(0, 0.03, 0); scene.add(plate);
+    function baseSq(x, z) { var b = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.7), new THREE.MeshLambertMaterial({ color: 0xffffff })); b.position.set(x, 0.05, z); scene.add(b); }
+    baseSq(19.4, 19.4); baseSq(0, 38.8); baseSq(-19.4, 19.4);
+    var mound = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 0.45, 24), dirtMat); mound.position.set(0, 0.22, 18); scene.add(mound);
+
+    var pit = person({ jersey: 0xe6e6e6, helmet: 0x333333 }); pit.group.position.set(0, 0.45, 18); scene.add(pit.group); shadow(0, 18, 0.5);
+    var cat = person({ jersey: 0x3a3f4b, pants: 0x2a2e38, helmet: 0x20242e, arms: false }); cat.group.position.set(0.1, 0.05, -1.4); cat.group.scale.set(1.05, 0.72, 1.05); scene.add(cat.group);
+    var chest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.18), new THREE.MeshLambertMaterial({ color: 0x556070 })); chest.position.set(0.1, 1.0, -1.18); scene.add(chest); shadow(0.1, -1.3, 0.5);
+
+    var fld = [[17, 21], [8, 32], [-8, 32], [-17, 21], [-37, 60], [0, 72], [37, 60]];
+    fld.forEach(function (f) { var pr = person({ jersey: 0xaab2c0, pants: 0xe8e8e8, helmet: 0x2b3442 }); pr.group.position.set(f[0], 0, f[1]); pr.group.rotation.y = Math.PI; scene.add(pr.group); shadow(f[0], f[1], 0.45); });
+
+    batterParts = person({ jersey: TEAMS[0].p, helmet: TEAMS[0].s, arms: false });
+    bGroup = batterParts.group; bGroup.position.set(-0.85, 0, 0.7); scene.add(bGroup); shadow(-0.85, 0.7, 0.5);
+    batPivot = new THREE.Group(); batPivot.position.set(0.18, 1.32, -0.05); bGroup.add(batPivot);
+    var hands = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), new THREE.MeshLambertMaterial({ color: 0x222222 })); batPivot.add(hands);
+    var fore = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 8), new THREE.MeshLambertMaterial({ color: 0xf0c08a })); fore.rotation.z = 1.15; fore.position.set(-0.17, -0.08, 0.02); batPivot.add(fore);
+    batHolder = new THREE.Group(); batPivot.add(batHolder);
+    var knob = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.07, 8), new THREE.MeshLambertMaterial({ color: 0xa8702f })); knob.position.y = 0.02; batHolder.add(knob);
+    batMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.062, 1.0, 10), new THREE.MeshLambertMaterial({ color: 0xc98a3a })); batMesh.position.y = 0.52; batHolder.add(batMesh);
+
+    ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 18, 18), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45, emissive: 0x222222 })); ball.visible = false; scene.add(ball);
+
+    function tower(ax) { var r = ax * D2R, R = 138, g = new THREE.Group(); var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 26, 8), new THREE.MeshLambertMaterial({ color: 0x6b7280 })); pole.position.y = 13; g.add(pole); var bank = new THREE.Mesh(new THREE.BoxGeometry(7, 3.2, 0.6), new THREE.MeshStandardMaterial({ color: 0xeef3f8, emissive: 0xfff4c2, emissiveIntensity: 0.7 })); bank.position.y = 26; g.add(bank); g.position.set(Math.sin(r) * R, 0, Math.cos(r) * R); g.rotation.y = -r; scene.add(g); }
+    tower(-36); tower(36); tower(-58); tower(58);
+    var sb = new THREE.Mesh(new THREE.BoxGeometry(32, 13, 1.6), new THREE.MeshLambertMaterial({ color: 0x1a1f2b })); sb.position.set(0, 18, 142); scene.add(sb);
+    var sbScreen = new THREE.Mesh(new THREE.BoxGeometry(28, 9.5, 0.3), new THREE.MeshStandardMaterial({ color: 0x0b3d2e, emissive: 0x16406a, emissiveIntensity: 0.55 })); sbScreen.position.set(0, 18.5, 141.1); scene.add(sbScreen);
+
+    fieldGroup = new THREE.Group(); scene.add(fieldGroup);
+  }
+
+  function rebuildField(p) {
+    var fg = fieldGroup;
+    while (fg.children.length) { var c = fg.children.pop(); if (c.geometry) c.geometry.dispose(); if (c.material && c.material.dispose) c.material.dispose(); }
+    var lineMat = new THREE.MeshLambertMaterial({ color: 0xf2f2f2 });
+    [1, -1].forEach(function (sign) { var line = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, p.lf), lineMat); line.position.set(Math.sin(sign * 45 * D2R) * p.lf / 2, 0.05, Math.cos(45 * D2R) * p.lf / 2); line.rotation.y = sign * 45 * D2R; fg.add(line); });
+    [1, -1].forEach(function (sign) { var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 9, 8), new THREE.MeshStandardMaterial({ color: 0xffd400, emissive: 0x8a7400, emissiveIntensity: 0.4 })); pole.position.set(Math.sin(sign * 45 * D2R) * p.lf, 4.5, Math.cos(45 * D2R) * p.lf); fg.add(pole); });
+    fg.add(flatBand(p, -4, -0.3, 0.04, dirtTrackMat));
+    var fenceMat = new THREE.MeshLambertMaterial({ color: p.dome ? 0x2b2f45 : 0x0f4d2e, side: THREE.DoubleSide });
+    var capMat = new THREE.MeshStandardMaterial({ color: 0xffd400, emissive: 0x6b5a00, emissiveIntensity: 0.3, side: THREE.DoubleSide });
+    fg.add(arcStrip(p, 0, 0, p.wall, fenceMat, -45, 45, 1));
+    fg.add(arcStrip(p, 0.04, p.wall, 0.18, capMat, -45, 45, 1));
+    var standMat = new THREE.MeshLambertMaterial({ map: crowdTex, side: THREE.DoubleSide });
+    fg.add(arcStrip(p, 7, 0.5, 12, standMat, -54, 54, 20));
+    fg.add(arcStrip(p, 13, 12.5, 9, standMat, -54, 54, 20));
+  }
+
+  function applyStadium(key) {
+    var p = PARKS[key]; activePark = p;
+    if (scene) { scene.background.setHex(p.sky); scene.fog.color.setHex(p.sky); scene.fog.far = p.dome ? 330 : 390; }
+    if (grassMesh) grassMesh.material.color.setHex(p.grass);
+    if (ambientLight) ambientLight.intensity = p.dome ? 1.1 : 0.85;
+    rebuildField(p);
+    $("parkInfo").textContent = "🏟 " + p.n + " · 중앙 " + p.cf + "m / 좌우 " + p.lf + "m";
+  }
+  function selectTeam(ti) {
+    S.team = ti; var T = TEAMS[ti];
+    if (batterParts) { batterParts.jersey.forEach(function (m) { m.material.color.setHex(T.p); }); batterParts.helmet.material.color.setHex(T.s); }
+    var btns = $("teamGrid").children;
+    for (var k = 0; k < btns.length; k++) btns[k].classList.toggle("sel", k === ti);
+    applyStadium(T.park); buildPlayerSeg(); selectPlayer(0);
+  }
+  function selectPlayer(pi) {
+    S.player = pi; var pl = TEAMS[S.team].players[pi];
+    var side = (pl.bats === "L") ? -1 : 1;
+    if (bGroup) { bGroup.position.x = 0.85 * side; bGroup.rotation.y = 0; }
+    S.swingFrom = (side > 0) ? 1.05 : -1.05;
+    S.swingTo = (side > 0) ? -1.0 : 1.0;
+    S.bodyTo = (side > 0) ? -0.4 : 0.4;
+    if (batPivot) { batPivot.position.x = 0.18 * side; batPivot.rotation.y = S.swingFrom; }
+    if (batHolder) batHolder.rotation.z = -0.6 * side;
+    // 난이도 하향: 컨택 윈도(타이밍 허용폭)를 전반적으로 넓게
+    S.win = Math.max(0.95, Math.min(1.55, 0.95 + (pl.ct - 66) / 22 * 0.5));
+    // 난이도 하향: 기본 파워를 약간 상향해 담장을 넘기기 쉽게
+    S.powerMult = 0.99 + (pl.pw - 70) / 30 * 0.16;
+    var c = $("playerSeg").children;
+    for (var i = 0; i < c.length; i++) c[i].classList.toggle("on", i === pi);
+  }
+  function buildPlayerSeg() {
+    var box = $("playerSeg"); box.innerHTML = "";
+    TEAMS[S.team].players.forEach(function (pl, idx) {
+      var b = document.createElement("button"); b.className = "pbtn";
+      b.innerHTML = '<div class="pn">' + pl.n + ' <span class="muted">(' + stanceLabel(pl.bats) + ')</span></div><div class="muted" style="margin-top:3px">파워 ' + pl.pw + ' · 정확 ' + pl.ct + '</div>';
+      b.addEventListener("click", function () { selectPlayer(idx); });
+      box.appendChild(b);
+    });
+  }
+  function sizeRenderer() { var w = cvwrap.clientWidth || 400; var h = Math.round(w * 0.82); if (h > 470) h = 470; renderer.setSize(w, h, false); var cv = renderer.domElement; cv.style.width = w + "px"; cv.style.height = h + "px"; camera.aspect = w / h; camera.updateProjectionMatrix(); }
+
+  function ballPosAt(prog) { var p = S.pitch, lob = (2.2 + (1.0 - 2.2) * prog) + 0.85 * Math.sin(prog * Math.PI); return { x: p.rx + (p.tx - p.rx) * prog + p.drift * p.bdir * prog * prog, y: lob + p.vb * prog * prog, z: 15 - 17 * prog }; }
+  function startBatSwing() { S.swing.active = true; S.swing.t0 = performance.now(); }
+  function throwPitch() {
+    if (S.phase !== "ready") return;
+    ensureAudio();
+    var pt = pickPitch();
+    S.pitch = { start: performance.now(), dur: pt.d0 + rand() * (pt.d1 - pt.d0), tx: (rand() * 2 - 1) * 0.4, rx: (rand() * 2 - 1) * 0.12, drift: pt.drift, bdir: (rand() < 0.5 ? -1 : 1), vb: pt.vb, prog: 0, swung: false, whiff: false, type: pt.n };
+    ball.visible = true; setFlash("", "none"); $("pitchTag").textContent = pt.n; S.phase = "pitch"; updateUI();
+  }
+  function swing() {
+    if (S.phase !== "pitch" || S.pitch.swung) return;
+    S.pitch.swung = true; startBatSwing();
+    // 난이도 하향: 정타/안타 판정 허용 오차를 넓히고, 너무 이른 스윙 기준도 완화(0.52 → 0.42)
+    var w = S.win, prog = S.pitch.prog, te = Math.abs(prog - IDEAL);
+    var tier = te <= 0.075 * w ? "barrel" : te <= 0.13 * w ? "solid" : te <= 0.23 * w ? "mishit" : "whiff";
+    if (prog < 0.42) tier = "whiff";
+    if (tier === "whiff") { sfx("whiff"); S.pitch.whiff = true; updateUI(); return; }
+    sfx("crack"); $("pitchTag").textContent = "";
+    var cp = ballPosAt(prog), v0, th;
+    // 난이도 하향: 타구 초속을 약간 올려 비거리를 확보
+    if (tier === "barrel") { v0 = 35.5 + rand() * 3.5; th = (28 + rand() * 5) * D2R; }
+    else if (tier === "solid") { v0 = 31 + rand() * 4; th = (26 + rand() * 9) * D2R; }
+    else { v0 = 19 + rand() * 8; th = (10 + rand() * 42) * D2R; }
+    v0 *= S.powerMult;
+    var off = Math.abs(cp.x);
+    // 난이도 하향: 빗맞은 타구 감속 완화
+    if (off > 0.9) v0 *= 0.88; else if (off > 0.5) v0 *= 0.95;
+    var phi = (rand() * 2 - 1) * 0.42 + (prog - IDEAL) * -2.0; phi = Math.max(-0.62, Math.min(0.62, phi));
+    var horiz = v0 * Math.cos(th);
+    var vel = { x: horiz * Math.sin(phi), y: v0 * Math.sin(th), z: horiz * Math.cos(phi) };
+    var y0 = Math.max(0.85, cp.y);
+    S.flight = { pos: { x: cp.x, y: y0, z: cp.z }, vel: vel, t: 0 };
+    ball.position.set(cp.x, y0, cp.z); S.phase = "flight"; updateUI();
+  }
+  function endFlight(isHR, distM) {
+    var m = Math.round(distM);
+    if (isHR) { S.hr++; if (distM > S.longestM) S.longestM = distM; sfx("hr"); setFlash("홈런! " + m + " m", "hr"); }
+    else { S.outsLeft--; sfx("out"); setFlash("아웃 · " + m + " m", "out"); }
+    S.phase = "result"; updateUI();
+    setTimeout(function () { ball.visible = false; afterResult(); }, isHR ? 1700 : 1300);
+  }
+  function afterResult() { if (S.outsLeft <= 0) gameOver(); else { S.phase = "ready"; updateUI(); } }
+  function gameOver() { if (S.hr > S.best) S.best = S.hr; S.submitted = false; S.phase = "over"; updateUI(); }
+  function startGame() { S.totalOuts = 7; S.outsLeft = 7; S.hr = 0; S.longestM = 0; S.pitch = null; S.flight = null; S.swing.active = false; S.submitted = false; if (ball) ball.visible = false; if (bGroup) bGroup.rotation.y = 0; if (batPivot) batPivot.rotation.y = S.swingFrom; $("pitchTag").textContent = ""; $("startOv").hidden = true; $("overOv").hidden = true; $("lbOv").hidden = true; setFlash("", "none"); S.phase = "ready"; updateUI(); }
+  function backToStart() { S.phase = "start"; S.pitch = null; S.flight = null; if (ball) ball.visible = false; $("pitchTag").textContent = ""; setFlash("", "none"); $("lbOv").hidden = true; updateUI(); }
+
+  function loop() {
+    requestAnimationFrame(loop);
+    var delta = clock.getDelta(); if (delta > 0.05) delta = 0.05;
+    var now = performance.now();
+    if (S.phase === "pitch" && S.pitch) {
+      var prog = Math.min((now - S.pitch.start) / S.pitch.dur, 1);
+      S.pitch.prog = prog; var pos = ballPosAt(prog); ball.position.set(pos.x, pos.y, pos.z);
+      if (prog >= 1) {
+        if (S.pitch.swung && S.pitch.whiff) { S.outsLeft--; setFlash("헛스윙 · 아웃", "out"); $("pitchTag").textContent = ""; ball.visible = false; S.phase = "result"; updateUI(); setTimeout(afterResult, 1150); }
+        else if (!S.pitch.swung) { S.outsLeft--; setFlash("패스 · 아웃", "out"); $("pitchTag").textContent = ""; ball.visible = false; S.phase = "result"; updateUI(); setTimeout(afterResult, 1150); }
+      }
+    } else if (S.phase === "flight" && S.flight) {
+      var f = S.flight; f.t += delta; f.vel.y -= G * delta;
+      f.pos.x += f.vel.x * delta; f.pos.y += f.vel.y * delta; f.pos.z += f.vel.z * delta;
+      ball.position.set(f.pos.x, f.pos.y, f.pos.z);
+      var hd = Math.sqrt(f.pos.x * f.pos.x + f.pos.z * f.pos.z);
+      var ang = Math.atan2(f.pos.x, f.pos.z) * 180 / Math.PI, fr = radiusAt(activePark, ang);
+      if (f.pos.y <= 0.05) { ball.position.y = 0.05; endFlight(hd >= fr, hd); S.flight = null; }
+      else if (f.t > 6.5 || hd > activePark.cf + 95) { endFlight(hd >= fr, hd); S.flight = null; }
+    }
+    if (S.swing.active) {
+      var e = (now - S.swing.t0) / 170, k = Math.min(e, 1), ease = 1 - (1 - k) * (1 - k);
+      batPivot.rotation.y = S.swingFrom + (S.swingTo - S.swingFrom) * ease;
+      bGroup.rotation.y = S.bodyTo * ease;
+      if (e >= 1.6) { S.swing.active = false; batPivot.rotation.y = S.swingFrom; bGroup.rotation.y = 0; }
+    }
+    renderer.render(scene, camera);
+  }
+
+  function initFirebase() {
+    if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") return;
+    if (typeof firebase === "undefined") return;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); fbReady = true;
+      db.collection("derbyScores").orderBy("hr", "desc").limit(100).onSnapshot(function (snap) {
+        var rows = []; snap.forEach(function (d) { rows.push(d.data()); });
+        rows.sort(function (a, b) { return (b.hr - a.hr) || ((b.longest || 0) - (a.longest || 0)); });
+        lbRows = rows.slice(0, 10); refreshLeaderboardViews();
+      }, function () {});
+    } catch (e) { fbReady = false; }
+  }
+  function submitScore() {
+    if (!fbReady || S.submitted) return;
+    var name = ($("nameInput").value || "익명").trim().slice(0, 12) || "익명";
+    var pl = TEAMS[S.team].players[S.player];
+    S.playerName = name; $("regBtn").disabled = true; $("regMsg").textContent = "등록 중…";
+    db.collection("derbyScores").add({ name: name, team: TEAMS[S.team].a, player: pl.n, hr: S.hr, longest: Math.round(S.longestM), ts: Date.now() })
+      .then(function () { S.submitted = true; $("regMsg").textContent = "등록 완료! 🏆"; })
+      .catch(function () { $("regBtn").disabled = false; $("regMsg").textContent = "등록 실패 — 잠시 후 다시 시도하세요."; });
+  }
+  function refreshLeaderboardViews() {
+    if (fbReady && lbRows.length) $("top1").textContent = "현재 1위: " + lbRows[0].name + " (" + lbRows[0].hr + "홈런)";
+    else if (!fbReady) $("top1").textContent = "온라인 랭킹: 배포 + Firebase 설정 후 사용 가능";
+    var box = $("lbList");
+    if (!fbReady) { box.innerHTML = ""; $("lbNote").textContent = "Firebase에 연결하고 배포(github.io 등)하면 실시간 랭킹이 켜져요. (이번 세션 최고: 홈런 " + S.best + "개)"; return; }
+    $("lbNote").textContent = "";
+    if (!lbRows.length) { box.innerHTML = '<div class="lbrow"><span class="nm muted">아직 기록이 없어요. 첫 기록을 남겨보세요!</span></div>'; return; }
+    var html = "";
+    for (var i = 0; i < lbRows.length; i++) {
+      var r = lbRows[i], ti = -1;
+      for (var t = 0; t < TEAMS.length; t++) if (TEAMS[t].a === r.team) ti = t;
+      var col = ti >= 0 ? "#" + TEAMS[ti].p.toString(16).padStart(6, "0") : "#888";
+      var who = escapeHtml(r.name) + ' <small>' + escapeHtml(r.team + (r.player ? " " + r.player : "")) + '</small>';
+      html += '<div class="lbrow"><span class="rk">' + (i + 1) + '</span><span class="dot-team" style="background:' + col + '"></span><span class="nm">' + who + '</span><span class="sc">' + r.hr + '홈런</span><span class="ds">' + (r.longest || 0) + 'm</span></div>';
+    }
+    box.innerHTML = html;
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function openLeaderboard() { refreshLeaderboardViews(); $("lbOv").hidden = false; }
+
+  function setFlash(text, type) { var fl = $("flash"); fl.className = "flash " + type; fl.querySelector(".txt").textContent = text; }
+  function updateUI() {
+    $("hrVal").textContent = S.hr;
+    $("longVal").textContent = S.longestM > 0 ? Math.round(S.longestM) + " m" : "-";
+    var dh = ""; for (var i = 0; i < S.totalOuts; i++) dh += '<span class="od ' + (i < S.outsLeft ? "on" : "") + '"></span>';
+    $("outDots").innerHTML = dh;
+    $("startOv").hidden = S.phase !== "start";
+    $("overOv").hidden = S.phase !== "over";
+    if (S.phase === "start") refreshLeaderboardViews();
+    if (S.phase === "over") {
+      var pl = TEAMS[S.team].players[S.player];
+      $("overSub").textContent = TEAMS[S.team].a + " " + pl.n + " · " + activePark.n + " · 홈런 " + S.hr + "개" + (S.longestM > 0 ? " · 최장 " + Math.round(S.longestM) + " m" : "");
+      $("overBest").textContent = "이번 세션 최고: 홈런 " + S.best + "개" + (fbReady ? "" : " · (온라인 랭킹은 배포 후)");
+      $("regBox").hidden = !fbReady;
+      if (fbReady) { $("regBtn").disabled = S.submitted; $("nameInput").value = S.playerName; if (!S.submitted) $("regMsg").textContent = ""; }
+    }
+    var playing = (S.phase === "ready" || S.phase === "pitch" || S.phase === "flight" || S.phase === "result");
+    $("throwBtn").hidden = !(playing && S.phase === "ready");
+    $("swingBtn").hidden = !(playing && S.phase === "pitch");
+    $("waitBtn").hidden = !(playing && (S.phase === "flight" || S.phase === "result"));
+  }
+  function primaryAction() { if (S.phase === "ready") throwPitch(); else if (S.phase === "pitch") swing(); }
+
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    cvwrap.appendChild(renderer.domElement);
+    buildScene(); clock = new THREE.Clock(); sizeRenderer();
+    window.addEventListener("resize", sizeRenderer); loop();
+  } catch (e) { $("webglWarn").hidden = false; }
+
+  (function () {
+    var grid = $("teamGrid");
+    for (var i = 0; i < TEAMS.length; i++) {
+      (function (idx) { var btn = document.createElement("button"); btn.textContent = TEAMS[idx].a; btn.style.background = "#" + TEAMS[idx].p.toString(16).padStart(6, "0"); btn.addEventListener("click", function () { selectTeam(idx); }); grid.appendChild(btn); })(i);
+    }
+  })();
+  if (scene) selectTeam(0);
+
+  $("startBtn").addEventListener("click", startGame);
+  $("throwBtn").addEventListener("click", throwPitch);
+  $("swingBtn").addEventListener("click", swing);
+  cvwrap.addEventListener("click", function () { if (S.phase === "ready" || S.phase === "pitch") primaryAction(); });
+  $("muteBtn").addEventListener("click", function () { S.muted = !S.muted; $("muteBtn").textContent = S.muted ? "🔇" : "🔊"; });
+  $("againBtn").addEventListener("click", startGame);
+  $("homeBtn").addEventListener("click", backToStart);
+  $("regBtn").addEventListener("click", submitScore);
+  $("lbBtn1").addEventListener("click", openLeaderboard);
+  $("lbBtn2").addEventListener("click", openLeaderboard);
+  $("lbClose").addEventListener("click", function () { $("lbOv").hidden = true; });
+  window.addEventListener("keydown", function (e) { if (e.code !== "Space" || e.repeat) return; if (S.phase === "ready" || S.phase === "pitch") { e.preventDefault(); primaryAction(); } });
+
+  initFirebase(); updateUI();
+});
+</script>

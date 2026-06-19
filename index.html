@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="가볍게 즐기는 게임을 모아 바로 플레이하는 게임 포털, Baseball Flash">
+<title>Baseball Flash — 게임 포털</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-head">
+  <h1 class="wordmark">BASEBALL<span class="dot"> FLASH</span></h1>
+  <p class="tagline">가볍게 즐기는 게임을 모아 골라서 바로 플레이하세요.</p>
+</header>
+
+<main id="grid" class="grid" aria-label="게임 목록"></main>
+
+<footer class="site-foot">© 2026 Baseball Flash. 간단한 게임들을 모아 즐기는 포털.</footer>
+
+<!-- 게임이 실행되는 슬롯(선택 시에만 iframe 생성, 나가면 파기) -->
+<section id="player" class="player" hidden aria-label="게임 플레이어">
+  <div class="player__bar">
+    <h2 id="playerTitle" class="player__title"></h2>
+    <button id="fsBtn" class="bar-btn" aria-label="전체화면">전체화면</button>
+    <button id="exitBtn" class="bar-btn bar-btn--exit" aria-label="게임 나가기">나가기</button>
+  </div>
+  <div id="frameHost" class="frame-host"></div>
+</section>
+
+<script type="module" src="portal.js"></script>
+</body>
+</html>
