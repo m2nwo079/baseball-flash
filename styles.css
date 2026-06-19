@@ -1,8 +1,9 @@
-/* styles.css — Baseball Flash 포털 셸 스타일 */
+/* styles.css — Baseball Flash 포털 셸 스타일 (히어로 + 그리드) */
 :root {
   --bg: #0a0e1a;
   --surface: #141a2b;
   --surface-2: #1c243c;
+  --hero-bg: #121a2e;
   --line: rgba(255, 255, 255, 0.09);
   --text: #eef2fb;
   --muted: #98a2bb;
@@ -31,24 +32,56 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
 /* 헤더 */
-.site-head { max-width: var(--maxw); margin: 0 auto; padding: 40px 20px 20px; }
-.wordmark {
-  font-size: clamp(28px, 5.5vw, 44px);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  margin: 0;
-}
+.site-head { max-width: var(--maxw); margin: 0 auto; padding: 40px 20px 14px; }
+.wordmark { font-size: clamp(28px, 5.5vw, 44px); font-weight: 800; letter-spacing: 0.08em; margin: 0; }
 .wordmark .dot { color: var(--accent); }
 .tagline { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+
+/* 히어로(대표 게임) */
+.hero-wrap { max-width: var(--maxw); margin: 0 auto; padding: 8px 20px 0; }
+.hero {
+  --accent: #f6b53c;
+  position: relative; overflow: hidden;
+  background: var(--hero-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 28px;
+  min-height: 200px;
+  display: flex; align-items: center; gap: 16px;
+}
+.hero[hidden] { display: none; }
+.hero__bgword {
+  position: absolute; left: 16px; top: 34%;
+  font-size: clamp(40px, 9vw, 68px); font-weight: 800;
+  color: rgba(255, 255, 255, 0.05); white-space: nowrap; pointer-events: none;
+}
+.hero__body { position: relative; z-index: 1; flex: 1; max-width: 64%; }
+.hero__badge {
+  display: inline-block; font-size: 12px; font-weight: 700;
+  color: #261a02; background: var(--accent); border-radius: 999px; padding: 3px 12px;
+}
+.hero__title { font-size: clamp(24px, 5vw, 32px); font-weight: 800; color: #f3f6fb; margin: 10px 0 8px; }
+.hero__desc { font-size: 14px; color: #aab2c2; line-height: 1.55; margin: 0 0 18px; }
+.hero__cta { font-size: 15px; padding: 11px 20px; }
+.hero__art { position: relative; z-index: 1; flex: none; }
+@media (max-width: 560px) {
+  .hero { padding: 22px; }
+  .hero__art { display: none; }
+  .hero__body { max-width: 100%; }
+}
+
+/* 섹션 제목 */
+.section-head { max-width: var(--maxw); margin: 0 auto; padding: 22px 20px 0; }
+.section-title { font-size: 16px; font-weight: 500; color: var(--text); margin: 0; }
 
 /* 그리드 */
 .grid {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 10px 20px 60px;
+  padding: 12px 20px 60px;
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 .card {
   --accent: #7c8cff;
@@ -56,20 +89,13 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  position: relative;
-  overflow: hidden;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
 }
-.card::before {
-  content: "";
-  position: absolute; inset: 0 0 auto 0; height: 3px;
-  background: var(--accent); opacity: 0.85;
-}
-.card--soon { opacity: 0.55; }
+.card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--accent); opacity: 0.85; }
+.card--soon { opacity: 0.5; }
 .card__top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.card__title { font-size: 19px; font-weight: 700; margin: 0; }
+.card__title { font-size: 18px; font-weight: 500; margin: 0; }
 .card__tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
 .card__desc { color: var(--muted); font-size: 14px; margin: 0; flex: 1; }
@@ -77,13 +103,7 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 .card__actions { display: flex; gap: 8px; }
 .soon-label { font-size: 13px; color: var(--muted); }
 
-.btn {
-  border-radius: var(--radius-sm);
-  padding: 9px 18px;
-  font-weight: 700;
-  font-size: 14px;
-  transition: transform .08s ease, background-color .12s ease;
-}
+.btn { border-radius: var(--radius-sm); padding: 9px 18px; font-weight: 700; font-size: 14px; transition: transform .08s ease, background-color .12s ease; }
 .btn:active { transform: translateY(1px); }
 .btn--play { background: var(--accent); color: #261a02; }
 .btn--play:hover { background: #ffc659; }
@@ -91,10 +111,7 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 /* 플레이어(게임 슬롯) */
 .player { position: fixed; inset: 0; z-index: 50; background: #05080f; display: flex; flex-direction: column; }
 .player[hidden] { display: none; }
-.player__bar {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line);
-}
+.player__bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .player__title { font-size: 15px; font-weight: 700; flex: 1; margin: 0; }
 .bar-btn { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; font-weight: 600; }
 .bar-btn:hover { background: #28324f; }
@@ -104,6 +121,4 @@ button { font-family: inherit; cursor: pointer; border: none; color: inherit; }
 
 .site-foot { max-width: var(--maxw); margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 12px; }
 
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
-}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

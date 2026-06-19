@@ -1,11 +1,12 @@
 // portal.js — 포털 셸 로직(진입점)
-// 책임: 매니페스트로 그리드 렌더 → 게임 선택 시 iframe 로드 → 전체화면/나가기.
-// 랭킹은 각 게임이 자체적으로 처리합니다(홈런 더비는 내부 Firebase 랭킹 사용).
+// 책임: 매니페스트로 (1) 히어로(대표 게임) (2) 카드 그리드를 그리고,
+//       게임 선택 시 iframe 로드 → 전체화면/나가기. 랭킹은 각 게임이 자체 처리.
 
 import { GAMES } from "./games.js";
 
 const $ = (id) => document.getElementById(id);
 const grid = $("grid");
+const hero = $("hero");
 const player = $("player");
 const frameHost = $("frameHost");
 const playerTitle = $("playerTitle");
@@ -13,11 +14,24 @@ const playerTitle = $("playerTitle");
 let activeFrame = null;
 let activeGame = null;
 
+renderHero();
 renderGrid();
 
 function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// 히어로: featured 우선, 없으면 첫 available 게임을 대표로
+function renderHero() {
+  const f = GAMES.find(g => g.featured && g.available) || GAMES.find(g => g.available);
+  if (!f) { hero.hidden = true; return; }
+  hero.style.setProperty("--accent", f.accent || "#f6b53c");
+  $("heroBgWord").textContent = f.title;
+  $("heroTitle").textContent = f.title;
+  $("heroDesc").textContent = f.blurb || f.desc || "";
+  $("heroPlay").onclick = () => openGame(f);
+  hero.hidden = false;
 }
 
 function renderGrid() {
@@ -82,7 +96,7 @@ function toggleFullscreen() {
   else if (player.requestFullscreen) player.requestFullscreen().catch(() => {});
 }
 
-// 게임이 셸에 종료를 요청하면 처리(현재 게임은 사용하지 않아도 무방).
+// 게임이 셸에 종료를 요청하면 처리(현재 게임은 사용하지 않아도 무방)
 window.addEventListener("message", (e) => {
   if (!activeFrame || e.source !== activeFrame.contentWindow) return;
   if (e.origin !== location.origin) return;
