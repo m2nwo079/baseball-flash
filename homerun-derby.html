@@ -92,13 +92,13 @@
         <div class="card">
           <div class="emoji">⚾</div>
           <h1>홈런 더비</h1>
-          <p>팀을 고르면 홈구장이 자동 설정돼요. 선수를 고르고 <b>스페이스 / 탭</b>으로 투구 → 다시 눌러 스윙! <b>안 치고 보내도 아웃</b>이니 적극적으로 노리세요. 타이밍 여유를 넉넉하게 잡아 두었어요.</p>
+          <p>팀을 고르면 홈구장이 자동 설정돼요. 선수를 고르고 <b>스페이스 / 탭</b>으로 투구 → 다시 눌러 스윙! <b>안 치고 보내도 아웃</b>이니 적극적으로 노리세요.</p>
           <div class="lbl">팀 (KBO)</div>
           <div id="teamGrid" class="teamgrid"></div>
           <div id="parkInfo"></div>
           <div class="lbl">타자 선택</div>
           <div id="playerSeg" class="playerseg"></div>
-          <div class="btn-row"><button id="startBtn" class="btn-green">▶ 시작 (아웃 7)</button></div>
+          <div class="btn-row"><button id="startBtn" class="btn-green">▶ 시작 (아웃 5)</button></div>
           <div class="btn-row"><button id="lbBtn1" class="btn-slate">🏆 랭킹 보기</button></div>
           <p id="top1" class="muted"></p>
           <p id="webglWarn" class="muted" hidden>※ 이 브라우저에서 3D(WebGL)를 지원하지 않는 것 같아요.</p>
@@ -182,20 +182,20 @@ window.addEventListener("load", function () {
     { n: "KIA 타이거즈", a: "KIA", p: 0xEA0029, s: 0x06141F, park: "gwangju", players: [{ n: "김도영", bats: "R", pw: 90, ct: 89 }, { n: "나성범", bats: "L", pw: 88, ct: 85 }] },
     { n: "한화 이글스", a: "한화", p: 0xFF6600, s: 0x000000, park: "daejeon", players: [{ n: "노시환", bats: "R", pw: 93, ct: 79 }, { n: "강백호", bats: "L", pw: 87, ct: 86 }] }
   ];
-  // 난이도 하향: 투구를 약간 느리게(d0/d1 증가), 변화량(drift/vb) 완화, 마구 비중 축소
+  // 난이도 중간: 초기 버전보다 쉽고 쉬운 수정 버전보다 어렵게 (투구 속도/변화 중간값)
   var PITCH_TYPES = [
-    { n: "직구", d0: 1120, d1: 1300, drift: 0.0, vb: 0.0, w: 55 },
-    { n: "슬라이더", d0: 1200, d1: 1360, drift: 0.4, vb: 0.0, w: 17 },
-    { n: "커브", d0: 1300, d1: 1470, drift: 0.2, vb: -0.30, w: 13 },
-    { n: "체인지업", d0: 1450, d1: 1640, drift: 0.10, vb: 0.12, w: 12 },
-    { n: "마구", d0: 1200, d1: 1420, drift: 0.7, vb: 0.25, w: 3 }
+    { n: "직구", d0: 1070, d1: 1240, drift: 0.0, vb: 0.0, w: 52 },
+    { n: "슬라이더", d0: 1150, d1: 1300, drift: 0.5, vb: 0.0, w: 18 },
+    { n: "커브", d0: 1240, d1: 1400, drift: 0.25, vb: -0.38, w: 13 },
+    { n: "체인지업", d0: 1390, d1: 1570, drift: 0.12, vb: 0.13, w: 12 },
+    { n: "마구", d0: 1140, d1: 1350, drift: 0.85, vb: 0.32, w: 5 }
   ];
   function pickPitch() { var tot = 0, i; for (i = 0; i < PITCH_TYPES.length; i++) tot += PITCH_TYPES[i].w; var r = rand() * tot; for (i = 0; i < PITCH_TYPES.length; i++) { r -= PITCH_TYPES[i].w; if (r <= 0) return PITCH_TYPES[i]; } return PITCH_TYPES[0]; }
 
   var renderer, scene, camera, clock, ball, batPivot, batMesh, batHolder, bGroup, batterParts, grassMesh, ambientLight, fieldGroup, activePark, grassTex, crowdTex, dirtTrackMat;
   var audio = null, db = null, fbReady = false, lbRows = [];
-  // 난이도 하향: 아웃 5 → 7
-  var S = { phase: "start", outsLeft: 7, totalOuts: 7, hr: 0, longestM: 0, best: 0, muted: false, team: 0, player: 0, win: 1, powerMult: 1, swingFrom: 1.9, swingTo: -1.5, bodyTo: -0.6, submitted: false, playerName: "", pitch: null, flight: null, swing: { active: false, t0: 0 } };
+  // 아웃 5 (기본)
+  var S = { phase: "start", outsLeft: 5, totalOuts: 5, hr: 0, longestM: 0, best: 0, muted: false, team: 0, player: 0, win: 1, powerMult: 1, swingFrom: 1.9, swingTo: -1.5, bodyTo: -0.6, submitted: false, playerName: "", pitch: null, flight: null, swing: { active: false, t0: 0 } };
 
   function stanceLabel(b) { return b === "L" ? "좌타" : b === "S" ? "양타" : "우타"; }
   function radiusAt(p, aDeg) { var x = Math.min(Math.abs(aDeg), 45) / 45; return p.lf + (p.cf - p.lf) * Math.cos(x * Math.PI / 2); }
@@ -338,10 +338,10 @@ window.addEventListener("load", function () {
     S.bodyTo = (side > 0) ? -0.4 : 0.4;
     if (batPivot) { batPivot.position.x = 0.18 * side; batPivot.rotation.y = S.swingFrom; }
     if (batHolder) batHolder.rotation.z = -0.6 * side;
-    // 난이도 하향: 컨택 윈도(타이밍 허용폭)를 전반적으로 넓게
-    S.win = Math.max(0.95, Math.min(1.55, 0.95 + (pl.ct - 66) / 22 * 0.5));
-    // 난이도 하향: 기본 파워를 약간 상향해 담장을 넘기기 쉽게
-    S.powerMult = 0.99 + (pl.pw - 70) / 30 * 0.16;
+    // 난이도 중간: 컨택 윈도를 원본과 쉬운 버전의 중간값으로
+    S.win = Math.max(0.87, Math.min(1.43, 0.88 + (pl.ct - 66) / 22 * 0.48));
+    // 난이도 중간: 기본 파워도 중간값
+    S.powerMult = 0.96 + (pl.pw - 70) / 30 * 0.16;
     var c = $("playerSeg").children;
     for (var i = 0; i < c.length; i++) c[i].classList.toggle("on", i === pi);
   }
@@ -368,21 +368,21 @@ window.addEventListener("load", function () {
   function swing() {
     if (S.phase !== "pitch" || S.pitch.swung) return;
     S.pitch.swung = true; startBatSwing();
-    // 난이도 하향: 정타/안타 판정 허용 오차를 넓히고, 너무 이른 스윙 기준도 완화(0.52 → 0.42)
+    // 난이도 중간: 판정 허용 오차와 이른 스윙 기준을 중간값으로
     var w = S.win, prog = S.pitch.prog, te = Math.abs(prog - IDEAL);
-    var tier = te <= 0.075 * w ? "barrel" : te <= 0.13 * w ? "solid" : te <= 0.23 * w ? "mishit" : "whiff";
-    if (prog < 0.42) tier = "whiff";
+    var tier = te <= 0.06 * w ? "barrel" : te <= 0.105 * w ? "solid" : te <= 0.19 * w ? "mishit" : "whiff";
+    if (prog < 0.47) tier = "whiff";
     if (tier === "whiff") { sfx("whiff"); S.pitch.whiff = true; updateUI(); return; }
     sfx("crack"); $("pitchTag").textContent = "";
     var cp = ballPosAt(prog), v0, th;
-    // 난이도 하향: 타구 초속을 약간 올려 비거리를 확보
-    if (tier === "barrel") { v0 = 35.5 + rand() * 3.5; th = (28 + rand() * 5) * D2R; }
-    else if (tier === "solid") { v0 = 31 + rand() * 4; th = (26 + rand() * 9) * D2R; }
-    else { v0 = 19 + rand() * 8; th = (10 + rand() * 42) * D2R; }
+    // 난이도 중간: 타구 초속을 중간값으로
+    if (tier === "barrel") { v0 = 34.5 + rand() * 3.5; th = (28 + rand() * 5) * D2R; }
+    else if (tier === "solid") { v0 = 30 + rand() * 4; th = (26 + rand() * 9) * D2R; }
+    else { v0 = 18 + rand() * 8; th = (9 + rand() * 44) * D2R; }
     v0 *= S.powerMult;
     var off = Math.abs(cp.x);
-    // 난이도 하향: 빗맞은 타구 감속 완화
-    if (off > 0.9) v0 *= 0.88; else if (off > 0.5) v0 *= 0.95;
+    // 난이도 중간: 빗맞은 타구 감속도 중간값
+    if (off > 0.9) v0 *= 0.85; else if (off > 0.5) v0 *= 0.935;
     var phi = (rand() * 2 - 1) * 0.42 + (prog - IDEAL) * -2.0; phi = Math.max(-0.62, Math.min(0.62, phi));
     var horiz = v0 * Math.cos(th);
     var vel = { x: horiz * Math.sin(phi), y: v0 * Math.sin(th), z: horiz * Math.cos(phi) };
@@ -399,7 +399,7 @@ window.addEventListener("load", function () {
   }
   function afterResult() { if (S.outsLeft <= 0) gameOver(); else { S.phase = "ready"; updateUI(); } }
   function gameOver() { if (S.hr > S.best) S.best = S.hr; S.submitted = false; S.phase = "over"; updateUI(); }
-  function startGame() { S.totalOuts = 7; S.outsLeft = 7; S.hr = 0; S.longestM = 0; S.pitch = null; S.flight = null; S.swing.active = false; S.submitted = false; if (ball) ball.visible = false; if (bGroup) bGroup.rotation.y = 0; if (batPivot) batPivot.rotation.y = S.swingFrom; $("pitchTag").textContent = ""; $("startOv").hidden = true; $("overOv").hidden = true; $("lbOv").hidden = true; setFlash("", "none"); S.phase = "ready"; updateUI(); }
+  function startGame() { S.totalOuts = 5; S.outsLeft = 5; S.hr = 0; S.longestM = 0; S.pitch = null; S.flight = null; S.swing.active = false; S.submitted = false; if (ball) ball.visible = false; if (bGroup) bGroup.rotation.y = 0; if (batPivot) batPivot.rotation.y = S.swingFrom; $("pitchTag").textContent = ""; $("startOv").hidden = true; $("overOv").hidden = true; $("lbOv").hidden = true; setFlash("", "none"); S.phase = "ready"; updateUI(); }
   function backToStart() { S.phase = "start"; S.pitch = null; S.flight = null; if (ball) ball.visible = false; $("pitchTag").textContent = ""; setFlash("", "none"); $("lbOv").hidden = true; updateUI(); }
 
   function loop() {
