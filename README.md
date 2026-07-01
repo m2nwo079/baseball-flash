@@ -6,6 +6,8 @@
 
 현재 포털에는 3D KBO 홈런 더비 게임이 수록되어 있습니다.
 
+https://m2nwo079.github.io/baseball-flash/
+
 ---
 
 ## 🎮 수록 게임
